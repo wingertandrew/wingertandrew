@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Receipt Relay</title>
+</head>
+<body>
+<h1>Receipt Relay Test</h1>
+<form action="/print" method="post" enctype="multipart/form-data">
+    <label>Message text</label><br>
+    <textarea name="text" rows="4" cols="40"></textarea><br>
+    <label>Image</label>
+    <input type="file" name="image" accept="image/png,image/jpeg"><br>
+    <button type="submit">Print</button>
+    <button type="submit" name="text" value="# Sample\n\nHello **world**">Test Sample</button>
+</form>
+</body>
+</html>
