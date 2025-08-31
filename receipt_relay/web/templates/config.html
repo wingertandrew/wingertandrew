@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Configuration</title>
+</head>
+<body>
+<h1>Configuration</h1>
+<form action="/config" method="post">
+    <label>SIGNAL_NUMBER</label><br>
+    <input type="text" name="signal_number" value="{{ config.signal_number or '' }}"><br>
+    <label>ALLOWED_SENDERS</label><br>
+    <input type="text" name="allowed_senders" value="{{ config.allowed_senders or '' }}"><br>
+    <label>SIGNAL_REST_URL</label><br>
+    <input type="text" name="signal_rest_url" value="{{ config.signal_rest_url }}"><br>
+    <button type="submit">Save</button>
+</form>
+</body>
+</html>

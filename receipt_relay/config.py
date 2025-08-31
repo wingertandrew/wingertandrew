@@ -1,6 +1,8 @@
 from pydantic_settings import BaseSettings
 from pydantic import Field
 from typing import Optional
+from pathlib import Path
+import json
 
 class Settings(BaseSettings):
     printer_vendor_id: str = Field('0x04B8', env='PRINTER_VENDOR_ID')
@@ -23,4 +25,25 @@ class Settings(BaseSettings):
     web_port: int = Field(8081, env='WEB_PORT')
     web_token: Optional[str] = Field(None, env='WEB_TOKEN')
 
-settings = Settings()
+
+CONFIG_PATH = Path(__file__).resolve().parent.parent / "config.json"
+
+
+def _load_settings() -> Settings:
+    data = {}
+    if CONFIG_PATH.exists():
+        data = json.loads(CONFIG_PATH.read_text())
+    return Settings(**data)
+
+
+settings = _load_settings()
+
+
+def save_settings(data: dict) -> None:
+    CONFIG_PATH.write_text(json.dumps(data, indent=2))
+
+
+def reload_settings() -> None:
+    """Reload settings from CONFIG_PATH, mutating the existing object."""
+    new_settings = _load_settings()
+    settings.__dict__.update(new_settings.__dict__)

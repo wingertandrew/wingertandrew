@@ -5,10 +5,12 @@ from uuid import uuid4
 from datetime import datetime
 from zoneinfo import ZoneInfo
 
-from ..config import settings
+from .. import config
 from ..core.markdown import markdown_to_lines
 from ..core.image import process_image
 from ..device.printer import EscposUsbPrinter
+
+settings = config.settings
 
 app = FastAPI()
 templates = Jinja2Templates(directory="receipt_relay/web/templates")
@@ -22,6 +24,14 @@ def _header() -> str:
 
 def _footer() -> str:
     return settings.footer_char * settings.max_cols
+
+
+def _check_token(request: Request) -> None:
+    token = settings.web_token
+    if token:
+        supplied = request.headers.get("X-Token")
+        if supplied != token:
+            raise HTTPException(status_code=401, detail="unauthorized")
 
 
 @app.get("/", response_class=HTMLResponse)
@@ -61,6 +71,35 @@ async def do_print(request: Request, text: str = Form(None), image: UploadFile |
     if "text/html" in accept:
         return templates.TemplateResponse("success.html", {"request": request, **payload})
     return JSONResponse(payload)
+
+
+@app.get("/config", response_class=HTMLResponse)
+async def get_config(request: Request):
+    _check_token(request)
+    return templates.TemplateResponse(
+        "config.html", {"request": request, "config": settings}
+    )
+
+
+@app.post("/config", response_class=HTMLResponse)
+async def post_config(
+    request: Request,
+    signal_number: str = Form(None),
+    allowed_senders: str = Form(None),
+    signal_rest_url: str = Form(None),
+):
+    _check_token(request)
+    data = {
+        "signal_number": signal_number or None,
+        "allowed_senders": allowed_senders or None,
+        "signal_rest_url": signal_rest_url or settings.signal_rest_url,
+    }
+    new_settings = config.Settings(**data)
+    config.save_settings(new_settings.model_dump(exclude_none=True))
+    config.reload_settings()
+    return templates.TemplateResponse(
+        "config.html", {"request": request, "config": settings}
+    )
 
 
 @app.get("/healthz")
