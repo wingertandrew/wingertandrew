@@ -1,0 +1,10 @@
+fastapi
+uvicorn[standard]
+pydantic
+jinja2
+python-escpos
+Pillow
+pytest
+httpx
+pydantic-settings
+python-multipart

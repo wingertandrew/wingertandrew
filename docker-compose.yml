@@ -1,0 +1,53 @@
+version: "3.9"
+services:
+  receipt-relay:
+    build: .
+    environment:
+      PRINTER_VENDOR_ID: "0x04B8"
+      PRINTER_PRODUCT_ID: ""
+      PRINTER_MAX_DOTS: "576"
+      MAX_COLS: "42"
+      CUT_MODE: "full"
+      HEADER_DT_TZ: "America/New_York"
+      HEADER_DT_FMT: "EEE MMM d, yyyy HH:mm:ss"
+      FOOTER_CHAR: "─"
+      SIGNAL_REST_URL: "http://signal:8080"
+      SIGNAL_NUMBER: "${SIGNAL_NUMBER}"
+      ALLOWED_SENDERS: "${ALLOWED_SENDERS}"
+      LOG_LEVEL: "INFO"
+      WEB_BIND: "0.0.0.0"
+      WEB_PORT: "8081"
+    devices:
+      - "/dev/bus/usb:/dev/bus/usb"
+    volumes:
+      - type: bind
+        source: /dev/bus/usb
+        target: /dev/bus/usb
+    depends_on:
+      signal:
+        condition: service_healthy
+    ports:
+      - "8081:8081"
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://localhost:8081/healthz"]
+      interval: 10s
+      timeout: 3s
+      retries: 10
+
+  signal:
+    image: bbernhard/signal-cli-rest-api:latest
+    environment:
+      - MODE=normal
+      - PHONE_NUMBER=${SIGNAL_NUMBER}
+    ports:
+      - "8080:8080"
+    volumes:
+      - signal-data:/home/.local/share/signal-cli
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:8080/v1/health"]
+      interval: 10s
+      timeout: 3s
+      retries: 20
+
+volumes:
+  signal-data:
